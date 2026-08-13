@@ -1,0 +1,21 @@
+# Sensitive documents — keep other people's docs and internal material out.
+*.pdf
+*.docx
+*.odt
+*.jpeg
+*.jpg
+*.png
+
+# ...but the generated résumé IS the deliverable, and the site links to it.
+!Scott_Long_Resume.pdf
+!Scott_Long_Resume.docx
+
+# macOS
+.DS_Store
+
+# Private, unsanitized master — for sending directly, never published.
+resume-detailed.PRIVATE.md
+Scott_Long_Resume_Detailed.*
+Career/
+LinkedIn-copy.PRIVATE.md
+Cover-letter.PRIVATE.md

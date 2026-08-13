@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scott Long — Lead Software Engineer</title>
+<meta name="description" content="Scott Long — Lead Software Engineer. Platform architecture, distributed systems, and applied AI. 11 years building the systems other teams build on.">
+
+<style>
+/* ============================================================
+   Palette — validated against the dataviz six checks.
+   Light surface #fcfcfb / dark #1a1a19. Single chart series
+   (blue slot 1) passes lightness band, chroma floor, and 3:1
+   contrast in both modes.
+   ============================================================ */
+:root {
+  color-scheme: light;
+  --surface-1:      #fcfcfb;
+  --plane:          #f9f9f7;
+  --text-primary:   #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted:     #898781;
+  --grid:           #e1e0d9;
+  --axis:           #c3c2b7;
+  --border:         rgba(11,11,11,0.10);
+  --series-1:       #2a78d6;
+  --series-1-soft:  #cde2fb;
+  --good:           #006300;
+  --accent-ink:     #1a3d5c;
+  --shadow:         0 1px 2px rgba(11,11,11,.04), 0 8px 24px -12px rgba(11,11,11,.10);
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --surface-1:      #1a1a19;
+    --plane:          #0d0d0d;
+    --text-primary:   #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #898781;
+    --grid:           #2c2c2a;
+    --axis:           #383835;
+    --border:         rgba(255,255,255,0.10);
+    --series-1:       #3987e5;
+    --series-1-soft:  #184f95;
+    --good:           #0ca30c;
+    --accent-ink:     #cde2fb;
+    --shadow:         0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface-1:      #1a1a19;
+  --plane:          #0d0d0d;
+  --text-primary:   #ffffff;
+  --text-secondary: #c3c2b7;
+  --text-muted:     #898781;
+  --grid:           #2c2c2a;
+  --axis:           #383835;
+  --border:         rgba(255,255,255,0.10);
+  --series-1:       #3987e5;
+  --series-1-soft:  #184f95;
+  --good:           #0ca30c;
+  --accent-ink:     #cde2fb;
+  --shadow:         0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.6);
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+body {
+  margin: 0;
+  background: var(--plane);
+  color: var(--text-primary);
+  font: 400 15px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 22px 72px; }
+.wrap.head-wrap { padding-bottom: 0; }
+
+/* ---------- header ---------- */
+header.masthead {
+  padding: 46px 0 22px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 26px;
+}
+.name {
+  margin: 0;
+  font-size: clamp(34px, 6vw, 52px);
+  font-weight: 700;
+  letter-spacing: -.022em;
+  line-height: 1.02;
+  color: var(--text-primary);
+}
+.role {
+  margin: 10px 0 0;
+  font-size: clamp(15px, 2.2vw, 18px);
+  color: var(--series-1);
+  font-weight: 600;
+  letter-spacing: -.005em;
+}
+.contact {
+  margin: 16px 0 0; padding: 0; list-style: none;
+  display: flex; flex-wrap: wrap; gap: 8px 18px;
+  font-size: 14px; color: var(--text-secondary);
+}
+.contact a { color: var(--text-secondary); text-decoration: none; border-bottom: 1px solid var(--border); }
+.contact a:hover, .contact a:focus-visible { color: var(--series-1); border-bottom-color: var(--series-1); }
+
+.toolbar {
+  display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+  margin-top: 22px;
+}
+.btn {
+  font: inherit; font-size: 13px; font-weight: 500;
+  padding: 7px 14px; border-radius: 999px; cursor: pointer;
+  background: var(--surface-1); color: var(--text-secondary);
+  border: 1px solid var(--border); text-decoration: none;
+  display: inline-flex; align-items: center; gap: 7px;
+  transition: color .15s, border-color .15s, background .15s;
+}
+.btn:hover, .btn:focus-visible { color: var(--series-1); border-color: var(--series-1); }
+.btn.primary { background: var(--series-1); color: #fff; border-color: var(--series-1); }
+.btn.primary:hover, .btn.primary:focus-visible { color: #fff; filter: brightness(1.08); }
+:focus-visible { outline: 2px solid var(--series-1); outline-offset: 2px; }
+
+/* ---------- lens filter row: ONE row above everything it scopes ---------- */
+.lensbar {
+  position: sticky; top: 0; z-index: 20;
+  background: color-mix(in srgb, var(--plane) 92%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 0; margin-bottom: 30px;
+}
+.lensbar-inner { max-width: 1080px; margin: 0 auto; padding: 0 22px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.lens-label { font-size: 11px; letter-spacing: .09em; text-transform: uppercase; color: var(--text-muted); font-weight: 600; margin-right: 4px; }
+.lens {
+  font: inherit; font-size: 13px; font-weight: 500;
+  padding: 6px 13px; border-radius: 999px; cursor: pointer;
+  background: transparent; color: var(--text-secondary);
+  border: 1px solid var(--border);
+  transition: color .15s, border-color .15s, background .15s;
+}
+.lens:hover { color: var(--series-1); border-color: var(--series-1); }
+.lens[aria-pressed="true"] { background: var(--series-1); color: #fff; border-color: var(--series-1); }
+.lens-count { font-variant-numeric: tabular-nums; opacity: .65; margin-left: 5px; font-size: 12px; }
+
+/* ---------- sections ---------- */
+section { margin-bottom: 46px; scroll-margin-top: 78px; }
+h2.sec {
+  font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+  font-weight: 700; color: var(--series-1);
+  margin: 0 0 4px; padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.sec-note { font-size: 13px; color: var(--text-muted); margin: 10px 0 20px; }
+.lede { font-size: 16px; line-height: 1.72; color: var(--text-secondary); margin: 18px 0 0; max-width: 74ch; }
+.lede strong { color: var(--text-primary); font-weight: 600; }
+
+/* ---------- stat tiles ---------- */
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(178px, 1fr)); gap: 12px; margin-top: 20px; }
+.tile {
+  background: var(--surface-1); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px 17px; box-shadow: var(--shadow);
+}
+.tile-val { font-size: 29px; font-weight: 700; letter-spacing: -.025em; color: var(--series-1); line-height: 1.05; }
+.tile-lbl { font-size: 12.5px; color: var(--text-secondary); margin-top: 6px; line-height: 1.4; }
+.tile-sub { font-size: 11.5px; color: var(--text-muted); margin-top: 5px; }
+
+/* ---------- charts ---------- */
+/* min(…,100%) keeps the track from forcing horizontal overflow on narrow screens */
+.charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(376px, 100%), 1fr)); gap: 16px; margin-top: 22px; }
+.card {
+  background: var(--surface-1); border: 1px solid var(--border);
+  border-radius: 12px; padding: 18px 18px 14px; box-shadow: var(--shadow);
+  min-width: 0;
+}
+.card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 3px; }
+.card-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin: 0; }
+.card-sub { font-size: 12px; color: var(--text-muted); margin: 0 0 14px; }
+.card svg { display: block; width: 100%; height: auto; overflow: visible; }
+.gridline { stroke: var(--grid); stroke-width: 1; }
+.axisline { stroke: var(--axis); stroke-width: 1; }
+.tick { fill: var(--text-muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.barlabel { fill: var(--text-secondary); font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.catlabel { fill: var(--text-secondary); font-size: 11.5px; }
+.bar { fill: var(--series-1); transition: opacity .12s; }
+.hit { fill: transparent; cursor: pointer; }
+.bargroup:hover .bar, .bargroup:focus-visible .bar { opacity: .78; }
+.linkbtn {
+  background: none; border: none; font: inherit; font-size: 12px; cursor: pointer;
+  color: var(--text-muted); padding: 2px 0; border-bottom: 1px solid var(--border);
+}
+.linkbtn:hover, .linkbtn:focus-visible { color: var(--series-1); border-bottom-color: var(--series-1); }
+
+/* table view twin */
+.tableview { display: none; margin-top: 12px; }
+.tableview.on { display: block; }
+.tableview table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.tableview th, .tableview td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--border); }
+.tableview th { color: var(--text-muted); font-weight: 600; font-size: 11px; letter-spacing: .05em; text-transform: uppercase; }
+.tableview td.num { text-align: right; font-variant-numeric: tabular-nums; color: var(--text-primary); }
+
+/* tooltip */
+#tip {
+  position: fixed; z-index: 60; pointer-events: none; opacity: 0;
+  transition: opacity .1s; background: var(--surface-1);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 8px 11px; box-shadow: var(--shadow); font-size: 12.5px;
+  color: var(--text-primary); max-width: 260px;
+}
+#tip.on { opacity: 1; }
+#tip .tk { color: var(--text-muted); font-size: 11px; display: block; margin-bottom: 2px; }
+#tip .tv { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* ---------- experience ---------- */
+.job { margin-bottom: 30px; }
+.job-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 18px; align-items: baseline; }
+.job-title { font-size: 18px; font-weight: 650; margin: 0; letter-spacing: -.012em; color: var(--text-primary); }
+.job-org { color: var(--series-1); }
+.job-when { font-size: 13px; color: var(--text-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.job-blurb { font-size: 14px; color: var(--text-secondary); margin: 8px 0 0; max-width: 78ch; }
+
+.initiative { margin-top: 22px; }
+.initiative > h4 {
+  font-size: 13.5px; font-weight: 650; margin: 0 0 3px;
+  color: var(--text-primary); display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
+}
+.chip {
+  font-size: 10px; letter-spacing: .06em; text-transform: uppercase; font-weight: 600;
+  color: var(--series-1); background: var(--series-1-soft);
+  padding: 2px 7px; border-radius: 4px; white-space: nowrap;
+}
+:root[data-theme="dark"] .chip, :root:where(:not([data-theme="light"])) .chip { color: #fff; }
+@media (prefers-color-scheme: light) { :root:where(:not([data-theme="dark"])) .chip { color: var(--series-1); } }
+.initiative-note { font-size: 13px; color: var(--text-muted); margin: 0 0 9px; }
+
+ul.bullets { list-style: none; margin: 8px 0 0; padding: 0; }
+ul.bullets > li {
+  position: relative; padding-left: 17px; margin-bottom: 8px;
+  font-size: 14.4px; line-height: 1.62; color: var(--text-secondary);
+  max-width: 86ch;
+}
+ul.bullets > li::before {
+  content: ""; position: absolute; left: 2px; top: .62em;
+  width: 5px; height: 5px; border-radius: 50%; background: var(--series-1); opacity: .55;
+}
+ul.bullets > li strong { color: var(--text-primary); font-weight: 600; }
+li.dim { display: none; }
+
+/* ---------- projects ---------- */
+.projects { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(298px, 100%), 1fr)); gap: 14px; margin-top: 20px; }
+.proj {
+  background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px;
+  padding: 16px 17px; box-shadow: var(--shadow); display: flex; flex-direction: column;
+  transition: border-color .15s, transform .15s;
+}
+.proj:hover { border-color: var(--series-1); transform: translateY(-2px); }
+.proj-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.proj-name { font-size: 15px; font-weight: 650; margin: 0; letter-spacing: -.01em; }
+.proj-name a { color: var(--text-primary); text-decoration: none; }
+.proj-name a:hover { color: var(--series-1); }
+.proj-badge { font-size: 10.5px; font-weight: 600; color: var(--good); white-space: nowrap; letter-spacing: .02em; }
+.proj-desc { font-size: 13.2px; color: var(--text-secondary); margin: 8px 0 12px; line-height: 1.55; flex: 1; }
+.proj-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+.tag { font-size: 10.5px; color: var(--text-muted); border: 1px solid var(--border); border-radius: 4px; padding: 2px 6px; }
+.proj.dim { display: none; }
+
+/* ---------- skills ---------- */
+.skills { margin-top: 20px; display: grid; gap: 2px; }
+.skillrow { display: grid; grid-template-columns: 158px 1fr; gap: 16px; padding: 11px 0; border-bottom: 1px solid var(--border); align-items: start; }
+.skillrow:last-child { border-bottom: none; }
+.skillrow dt { font-size: 12px; font-weight: 650; color: var(--series-1); letter-spacing: .04em; text-transform: uppercase; padding-top: 2px; }
+.skillrow dd { margin: 0; font-size: 14px; color: var(--text-secondary); line-height: 1.62; }
+@media (max-width: 620px) { .skillrow { grid-template-columns: 1fr; gap: 4px; } }
+
+/* ---------- misc ---------- */
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+@media (max-width: 720px) { .two { grid-template-columns: 1fr; gap: 26px; } }
+.edu-deg { font-size: 15px; font-weight: 650; margin: 0; }
+.edu-meta { font-size: 13.5px; color: var(--text-secondary); margin: 4px 0 0; }
+.edu-sub { font-size: 13px; color: var(--text-muted); margin: 3px 0 0; }
+footer.foot { border-top: 1px solid var(--border); padding-top: 20px; font-size: 12.5px; color: var(--text-muted); display: flex; flex-wrap: wrap; gap: 8px 20px; justify-content: space-between; }
+.skip { position: absolute; left: -9999px; }
+.skip:focus { left: 12px; top: 12px; z-index: 99; background: var(--series-1); color: #fff; padding: 9px 15px; border-radius: 8px; }
+
+/* ---------- print: a clean resume from Cmd-P ---------- */
+@media print {
+  :root { --surface-1:#fff; --plane:#fff; --text-primary:#000; --text-secondary:#1a1a1a;
+          --text-muted:#555; --border:#ccc; --series-1:#1a3d5c; --shadow:none; }
+  .lensbar, .toolbar, .linkbtn, #tip, .card-sub, footer.foot { display: none !important; }
+  body { font-size: 10.2pt; background: #fff; }
+  .wrap { max-width: none; padding: 0; }
+  header.masthead { padding: 0 0 10px; }
+  .name { font-size: 21pt; }
+  .role { font-size: 11pt; }
+  section { margin-bottom: 15px; page-break-inside: avoid; }
+  .job, .initiative { page-break-inside: avoid; }
+  .card, .tile, .proj { box-shadow: none; border: 1px solid #ddd; page-break-inside: avoid; }
+  li.dim, .proj.dim { display: none !important; }
+  a { color: #000 !important; text-decoration: none; }
+  .tableview { display: block !important; }
+  .card svg { display: none; }
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<div class="wrap head-wrap">
+  <header class="masthead">
+    <h1 class="name">Scott Long</h1>
+    <p class="role">Lead Software Engineer · Platform Architecture · Distributed Systems · Applied AI</p>
+    <ul class="contact">
+      <li>Minneapolis–St. Paul, MN</li>
+      <li><a href="mailto:longstoryscott@gmail.com">longstoryscott@gmail.com</a></li>
+      <li><a href="https://www.linkedin.com/in/scott-long-b4a2394b/" rel="noopener">LinkedIn</a></li>
+      <li><a href="https://github.com/longstoryscott" rel="noopener">GitHub</a></li>
+      <li><a href="https://github.com/llmmllab" rel="noopener">llmmllab</a></li>
+    </ul>
+    <div class="toolbar">
+      <a class="btn primary" href="Scott_Long_Resume.pdf" download>Download PDF</a>
+      <a class="btn" href="Scott_Long_Resume.docx" download>Download DOCX</a>
+      <a class="btn" href="resume.md">Markdown</a>
+      <button class="btn" id="themeBtn" type="button" aria-live="polite">Dark mode</button>
+    </div>
+  </header>
+</div>
+
+<!-- ONE filter row, above everything it scopes -->
+<div class="lensbar">
+  <div class="lensbar-inner" role="group" aria-label="Filter the resume by focus area">
+    <span class="lens-label">Lens</span>
+    <button class="lens" type="button" data-lens="all" aria-pressed="true">Everything</button>
+    <button class="lens" type="button" data-lens="platform" aria-pressed="false">Platform &amp; Infrastructure</button>
+    <button class="lens" type="button" data-lens="ai" aria-pressed="false">AI &amp; Agentic Systems</button>
+    <button class="lens" type="button" data-lens="backend" aria-pressed="false">Backend &amp; Distributed</button>
+    <button class="lens" type="button" data-lens="lead" aria-pressed="false">Leadership</button>
+  </div>
+</div>
+
+<main class="wrap" id="main">
+
+  <section id="summary">
+    <h2 class="sec">Summary</h2>
+    <p class="lede" id="lede"></p>
+    <div class="tiles" id="tiles"></div>
+  </section>
+
+  <section id="evidence">
+    <h2 class="sec">The Receipts</h2>
+    <p class="sec-note">Every number below is counted from authored git history, not estimated.</p>
+    <div class="charts" id="charts"></div>
+  </section>
+
+  <section id="experience">
+    <h2 class="sec">Experience</h2>
+    <div id="jobs"></div>
+  </section>
+
+  <section id="opensource">
+    <h2 class="sec">Personal &amp; Open Source</h2>
+    <p class="sec-note">The same systems work, done in the open — four published packages and a self-hosted LLM serving platform.</p>
+    <div class="projects" id="projects"></div>
+  </section>
+
+  <section id="skills">
+    <h2 class="sec">Technical Profile</h2>
+    <dl class="skills" id="skillList"></dl>
+  </section>
+
+  <section id="education">
+    <div class="two">
+      <div>
+        <h2 class="sec">Education</h2>
+        <p class="edu-deg">Bachelor of Individualized Studies</p>
+        <p class="edu-meta">Global Studies · Communication Studies · English</p>
+        <p class="edu-sub">University of Minnesota – Twin Cities · 2006–2012<br>Minors: Spanish, Psychology · Study abroad: Buenos Aires, 2011</p>
+        <h2 class="sec" style="margin-top:26px">Languages</h2>
+        <p class="edu-meta">English (native) · Spanish (full professional) · French (limited working)</p>
+      </div>
+      <div>
+        <h2 class="sec">Certifications</h2>
+        <ul class="bullets" style="margin-top:12px">
+          <li>Microsoft Azure Fundamentals (2023)</li>
+          <li>OWASP API Security Top 10 (2023)</li>
+          <li>AI Product Security</li>
+          <li>RAG with LlamaIndex</li>
+          <li>Prompt Engineering with LangChain</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <span>Scott Long · Lead Software Engineer</span>
+    <span>Built as a static site — no framework, no tracking.</span>
+  </footer>
+</main>
+
+<div id="tip" role="status" aria-live="polite"></div>
+
+<script>
+/* ============================================================
+   Content model. Every bullet carries the lenses it belongs to,
+   so the filter row scopes the whole page from one place.
+   ============================================================ */
+const LEDE = `Lead engineer with <strong>11 years</strong> building the foundational systems other teams build on. I own cross-cutting platform surfaces — Terraform module libraries, CI/CD template suites, shared client libraries, identity and access services, API gateway architecture — and ship them at a velocity that unblocks entire organizations rather than single teams. Most recently I designed and delivered an <strong>agentic computer-use automation platform</strong> from an empty cloud subscription to production across eleven repositories in four months: an LLM-compiled, self-healing executor driving browser DOM, Linux desktop GUI, OS, and HTTP surfaces from one engine. It automates <strong>electronic health record workflows delivered over Citrix HDX</strong> — a class of target widely treated as unautomatable — and repairs its own drifted automations as reviewed pull requests.`;
+
+const TILES = [
+  { v: "5,300+", l: "Commits authored", s: "across ~50 repositories, 2022–2026" },
+  { v: "1,785",  l: "Commits in 2026 alone", s: "mostly net-new architecture" },
+  { v: "+241k",  l: "Lines shipped in 4 months", s: "an 11-repository platform build" },
+  { v: "4",      l: "Published packages", s: "PyPI + npm, 80+ releases" },
+];
+
+const CHART_COMMITS = {
+  id: "commits",
+  title: "Commits authored per year",
+  sub: "Counted from git history across ~50 repositories. 2026 covers January through August.",
+  unit: "commits",
+  cat: "Year",
+  data: [
+    { k: "2022", v: 882 },
+    { k: "2023", v: 934 },
+    { k: "2024", v: 1094 },
+    { k: "2025", v: 634 },
+    { k: "2026", v: 1785, note: "7 months" },
+  ],
+};
+
+const CHART_LINES = {
+  id: "lines",
+  title: "The 4-month platform build, by repository",
+  sub: "Lines added, April–August 2026. Eleven repositories taken from empty to production.",
+  unit: "lines added",
+  cat: "Repository",
+  data: [
+    { k: "executor engine",    v: 72936 },
+    { k: "control plane",      v: 54870 },
+    { k: "operator console",   v: 33800 },
+    { k: "terraform estate",   v: 26461 },
+    { k: "e2e harness",        v: 23494 },
+    { k: "task ingestion",     v: 10110 },
+    { k: "credentials broker", v: 6898 },
+    { k: "task egress",        v: 5749 },
+    { k: "support frontend",   v: 4120 },
+    { k: "support backend",    v: 1564 },
+    { k: "workflow library",   v: 1264 },
+  ],
+};
+
+const JOBS = [
+  {
+    title: "Lead Software Engineer", org: "Ensemble Health Partners",
+    when: "June 2022 – Present", place: "Minneapolis, MN",
+    blurb: "Healthcare revenue cycle management. Progressed from delivering platform services to owning the foundational, cross-cutting capabilities that dozens of engineering teams depend on daily — consulted across the org from junior engineers to principal architects.",
+    initiatives: [
+      {
+        name: "Agentic computer-use automation platform", chip: "2026",
+        note: "Sole architect and primary engineer of a greenfield platform replacing brittle commercial RPA with deterministic, self-repairing automation.",
+        bullets: [
+          { t: ["ai","platform"], h: "Designed and built a <strong>self-healing computer-use executor</strong>: an LLM compiles declarative workflow specs <em>once</em> into committed, deterministic replay scripts; at runtime, when a UI target drifts, the engine repairs itself and emits the fix. This keeps the model <strong>off the hot path</strong> entirely, so steady-state execution is plain browser/desktop automation — fast, cheap, auditable — while still absorbing UI change automatically." },
+          { t: ["ai"], h: "Architected a <strong>three-tier healing model</strong> — element re-location, single-step re-plan, and whole-workflow re-plan — unified across <strong>four automation surfaces</strong> (browser DOM, Linux desktop GUI, OS/shell, HTTP) behind one registry-driven abstraction, with per-surface prompt contracts versioned as reviewable artifacts rather than buried in code." },
+          { t: ["ai","platform"], h: "Made every repair <strong>land as a reviewed pull request</strong>, so automation improves under version control with a human in the loop instead of silently mutating in production — turning self-healing from an operational risk into a code-review workflow." },
+          { t: ["ai"], h: "Solved desktop automation where <strong>no DOM exists</strong> with a layered grounding stack — deterministic template matching → OCR → vision-language model — so the expensive vision path runs only as a last resort. Deployed and benchmarked a <strong>self-hosted vision-language grounding endpoint at 84% accuracy</strong> behind a pluggable backend protocol, on private GPU compute with its own model-staging pipeline for a network-isolated registry." },
+          { t: ["ai","backend"], h: "<strong>Automated a GUI-delivered EHR application over Citrix HDX</strong> by refusing a bespoke integration: composed the remote-session handoff out of atomic primitives already available on the existing surfaces, then drove the full clinical lookup and coverage-update workflows end to end <strong>without any vision-model dependency at steady state</strong>." },
+          { t: ["backend","platform"], h: "Built the <strong>control plane</strong> (FastAPI, PostgreSQL, Alembic, Azure Service Bus, Entra ID JWT auth, OpenTelemetry): run lifecycle state machine, per-tenant work queues with <strong>serial-in-order session guarantees</strong> so one tenant never has two batches in flight while hundreds run in parallel, stuck-run reaper, force-stop, claim/release semantics, and outcome ledgers derived from raw run facts." },
+          { t: ["backend","platform"], h: "Executed the <strong>SQL Server → PostgreSQL migration</strong> across three environments: translated T-SQL stored procedures to Postgres dialect, introduced Alembic as the migration authority, built an <strong>ephemeral in-network migration runner requiring no standing infrastructure</strong>, cut over development → UAT → production behind a feature flag, then decommissioned SQL Server entirely." },
+          { t: ["platform"], h: "Owned the <strong>Terraform estate across per-environment cloud subscriptions</strong>: Container Apps Jobs, private ingress via private endpoints, egress routed through the existing corporate network path rather than bespoke infrastructure, messaging with public network access closed, Workload Identity Federation service connections, and a bootstrap chain owning the <strong>entire path from empty subscription to <code>apply</code></strong>." },
+          { t: ["platform"], h: "<strong>Collapsed a fragmenting per-surface architecture into one image, one queue, one job</strong> — eliminating a class of drift where a rehearsal and a production run could silently differ, and removing any need for upstream systems to know which surface a workflow used. Consolidated four container images and two registries into one." },
+          { t: ["ai","platform"], h: "Built an <strong>MCP (Model Context Protocol) authoring toolchain</strong> that lets an engineer rehearse a workflow against the live application inside a watchable container, then generate the spec and replay script <em>from what was actually observed</em> — collapsing the entire surface to a single dispatch tool so one permission rule covers a full authoring session, with policy prose couldn't enforce moved into deterministic pre-execution hooks." },
+          { t: ["backend","platform"], h: "Shipped the surrounding platform: <strong>operator console</strong> (React, TypeScript, Vite, MUI, Vitest, Playwright), a containerized <strong>end-to-end harness</strong> gating CI, <strong>task ingestion</strong> and <strong>egress</strong> services, and a <strong>credentials broker</strong> minting TOTP/MFA codes at replay time so no secret is ever written into a generated script or a log." },
+          { t: ["platform"], h: "Held a <strong>90% coverage gate</strong> across the engine with full dependency injection — no real browser, screen, network, or cloud dependency in the unit suite." },
+        ],
+      },
+      {
+        name: "Enterprise identity & access management", chip: "2023–2025",
+        bullets: [
+          { t: ["backend","lead"], h: "Led the Access Management program <strong>end to end through team turnover and shifting scope</strong>, delivering the .NET service suite that became the foundation for the organization's identity-governance program: a centralized <strong>directory mirror service</strong> exposing role-aware identity to every platform service, an <strong>event-driven synchronization service</strong> reconciling directory state over message bus and event grid, a <strong>file ingestion and validation service</strong> with configurable business rules and downstream fan-out, and a <strong>shared library and package suite</strong> consumed across the platform." },
+          { t: ["backend"], h: "<strong>Made directory group-membership synchronization dramatically more efficient</strong> by restructuring event handling and group add/remove operations, and eliminated production race conditions in user synchronization with Redis-backed caching, queued-task telemetry, and idempotent upserts." },
+          { t: ["backend","platform"], h: "Retired substantial technical debt and <strong>closed standing security gaps</strong> by consolidating fragmented, ad-hoc access paths behind a single auditable service boundary — with an auditable base contract and asynchronous audit logging throughout." },
+          { t: ["platform"], h: "Added load testing to the CI/CD pipeline and drove the telemetry that made a long-standing production-only sync defect diagnosable." },
+        ],
+      },
+      {
+        name: "Foundational Platform & Shared Capabilities", chip: "2022–2026",
+        bullets: [
+          { t: ["platform"], h: "Author and owner of the organization's <strong>shared CI/CD pipeline template library</strong> — build, test, lint, semantic versioning, IaC deployment, and load-test stages — fully parameterized for multi-environment promotion and multi-agent-pool routing, and the default delivery path across the org." },
+          { t: ["platform"], h: "Built the <strong>shared Terraform module library</strong> abstracting complex cloud architecture into single-call capabilities, and defined the <strong>security domains</strong>, resource-group topology, and access-control patterns dozens of teams provision against — architectural ownership of shared plumbing on behalf of the whole engineering organization." },
+          { t: ["backend"], h: "Designed and delivered a <strong>FHIR API backend</strong> for electronic health record integration, enabling partner programs to go live against the broader healthcare ecosystem." },
+          { t: ["backend","lead"], h: "Delivered a <strong>contingent-worker provisioning integration with Workday</strong>, tying together HR, identity, security, and engineering systems and materially accelerating worker onboarding approvals — cited in performance review as a quality, scalable solution spanning four organizations." },
+          { t: ["platform"], h: "Established the <strong>micro-frontend architecture</strong> (Piral + React) allowing every team to contribute to one shell application, and contributed to the shared <strong>design-system theme package</strong> consumed org-wide." },
+          { t: ["backend"], h: "Built a suite of <strong>internal data-platform services</strong>: an audit-logging service (Azure Functions; GraphQL for flexible reads, REST for simple writes, MongoDB-backed, with JSON-Schema-governed log contracts and a schema standard adopted org-wide), a data-pipeline mapping service, a client-metadata service establishing one source of truth, and an automated notification service for the data-engineering organization." },
+          { t: ["platform","lead"], h: "Created the roadmap, <strong>API gateway architecture (Azure APIM)</strong>, and production deployment process for the <strong>enterprise application integration platform</strong>, presenting architecture to cross-functional stakeholders to align technical direction and operational readiness." },
+          { t: ["backend","platform"], h: "Delivered a complete <strong>clinical advisory product in a four-week skunkworks</strong> — FastAPI + async SQLAlchemy backend, React/Vite frontend, data model, and Terraform estate — across five repositories." },
+          { t: ["platform"], h: "Championed operational readiness org-wide: intraday monitoring, recovering caches, telemetry automation across teams, and the runbooks that make them supportable." },
+        ],
+      },
+      {
+        name: "Leadership & Influence", chip: "ongoing",
+        bullets: [
+          { t: ["lead"], h: "Ran interview loops and onboarding; consulted daily with engineers from junior through lead-and-above on integration patterns, platform capabilities, and design trade-offs — coaching by asking the right questions rather than prescribing answers." },
+          { t: ["lead"], h: "Authored the durable written record: architecture diagrams, runbooks, module documentation, onboarding and operational guides, and how-to recipes on the shared technical docs site — so institutional knowledge outlives any individual contributor." },
+          { t: ["lead"], h: "Recognized in performance reviews for architecting across multiple services and teams, keeping complex multi-discipline initiatives on schedule through organizational change, and <strong>driving tense discussions toward objective, fact-based decisions</strong>." },
+          { t: ["lead","ai"], h: "Modeled the learning culture as a participant in internal GenAI upskilling programs and cross-team architecture refinement sessions." },
+        ],
+      },
+    ],
+  },
+  {
+    title: "Senior Software Engineer", org: "Optum (UnitedHealth Group)",
+    when: "August 2020 – June 2022", place: "Minneapolis, MN",
+    blurb: "Led the platform team for a big-data claims ingestion and self-service pipeline platform.",
+    initiatives: [{ name: null, bullets: [
+      { t: ["platform","lead"], h: "Led the platform team responsible for <strong>self-service data pipeline configuration and ingestion</strong>, removing manual provisioning overhead for every downstream consuming team." },
+      { t: ["backend"], h: "Rebuilt a historical claims loader to hit a hard <strong>six-week deadline for 100,000+ data files</strong> (~10 GB each): replaced per-file temp-directory staging with <strong>end-to-end transformation streams</strong> piping compressed archives directly into the validation engine for a <strong>~4× throughput gain</strong>, then added a size-aware adaptive upload-pacing algorithm for a <strong>further ~2×</strong>. Delivered the full backlog inside the deadline." },
+      { t: ["platform","lead"], h: "Wrote a CLI tool that <strong>automated an entirely manual database schema-configuration process in three days</strong> and trained the team on it — <strong>saving an estimated 1,000+ engineering hours over the following six months</strong>. Self-initiated, outside assigned scope." },
+      { t: ["backend"], h: "Built a <strong>MongoDB single source of truth for client metadata</strong>, collapsing duplicated and conflicting records across systems." },
+      { t: ["backend","platform"], h: "Introduced <strong>GraphQL and JSON-Schema validation</strong> to the platform, <strong>defined the org's schema standard, structure, and supporting APIs</strong>, and delivered the <strong>OAuth2 service-to-service authentication strategy</strong>." },
+      { t: ["platform"], h: "Solved a hard infrastructure constraint by resolving customer identifiers at Terraform apply time through a provisioner reading a network-private API otherwise unreachable from the cloud — <strong>zero missing-identifier incidents since</strong>." },
+      { t: ["lead","platform"], h: "Established TDD patterns for code contribution, maintained the Terraform-managed cloud estate, and won a policy change loosening single-code-owner PR approval that had been the team's primary delivery bottleneck — after which the team <strong>stopped missing deadlines</strong> and began regular demos." },
+    ]}],
+  },
+  {
+    title: "Software Engineer", org: "Bluespire Marketing",
+    when: "August 2019 – August 2020", place: "Minneapolis, MN",
+    blurb: null,
+    initiatives: [{ name: null, bullets: [
+      { t: ["backend"], h: "Built complex data-driven applications in <strong>C# (.NET / .NET Core)</strong> and designed the supporting SQL Server schema and stored-procedure layer." },
+      { t: ["platform"], h: "Created the team's <strong>DevOps pipelines and automated deployments</strong>, replacing manual release steps, and brought a costly offshore support contract back in-house." },
+      { t: ["backend"], h: "Integrated eCommerce payment-gateway flows in JavaScript." },
+    ]}],
+  },
+  {
+    title: "Earlier Experience", org: null,
+    when: "2015 – 2019", place: null,
+    blurb: null,
+    initiatives: [{ name: null, bullets: [
+      { t: ["backend"], h: "<strong>Web Developer, Scientific Societies</strong> (Dec 2017 – Aug 2019) — Extended SharePoint with custom C#/.NET functionality. Wrote a modern JavaScript library <strong>backward-compatible to IE6</strong> — a hard constraint of the legacy SharePoint version — and open-sourced it for continued use after departure. Built Python/Node.js file-manipulation and web-crawling tooling, including a broken-link crawler for a large raw-HTML site." },
+      { t: ["platform"], h: "<strong>Freelance Developer</strong> (Jan 2016 – Present) — Linux systems administration (CentOS/Ubuntu) and full-stack delivery for small businesses: React frontends paired with WordPress admin interfaces, and REST APIs in Node.js." },
+      { t: ["backend"], h: "<strong>Web Developer, Virtus Law</strong> (Jun 2015 – May 2017) — Built software to collect client data and <strong>generate legal documents automatically</strong>, removing the bulk of manual document preparation. Redesigned and maintained the public and internal sites." },
+    ]}],
+  },
+];
+
+const PROJECTS = [
+  { n: "llmmllab", url: "https://github.com/llmmllab", badge: "34 merged PRs", t: ["ai","backend","platform"],
+    d: "Self-hosted, multi-node LLM inference, evaluation, and serving platform across six repositories. FastAPI service exposing OpenAI-, Anthropic-, and Ollama-compatible endpoints; a llama.cpp manager and proxy doing VRAM-pressure-aware, tensor-split-aware eviction and routing to warm free-slot peers; LangGraph orchestration; gRPC contracts; React UI; k3s manifests.",
+    tags: ["Python","FastAPI","gRPC","LangGraph","llama.cpp","k3s","React"] },
+  { n: "schema2code", url: "https://pypi.org/project/schema2code/", badge: "on PyPI", t: ["ai","backend"],
+    d: "Generates typed models from JSON/YAML Schema across five targets: Go, Python (Pydantic or dataclasses), TypeScript, C#/.NET, and protobuf. Its current direction lets LLMs call tools by writing sandboxed Python instead of JSON tool calls — measured at 70% fewer tokens and 66% fewer round trips.",
+    tags: ["Python","C#","TypeScript","Go","protobuf"] },
+  { n: "mcp-server-gmail", url: "https://github.com/longstoryscott/mcp-server-gmail", badge: null, t: ["ai","backend"],
+    d: "FastMCP server giving AI assistants Gmail access — search, read, grep with context lines, label management — behind OAuth 2.0 via Dex + OpenLDAP, with dual stdio/HTTP transport and Kubernetes deployment.",
+    tags: ["Python","FastMCP","OAuth2","Dex","Kubernetes"] },
+  { n: "mcp-server-web", url: "https://github.com/llmmllab/mcp-server-web", badge: null, t: ["ai"],
+    d: "MCP server performing web search and content extraction via SearXNG and BeautifulSoup, so a local model can research without a third-party search API.",
+    tags: ["Python","MCP","SearXNG"] },
+  { n: "k3s-cluster", url: "https://github.com/longstoryscott/k3s-cluster", badge: null, t: ["platform"],
+    d: "Bare-metal Raspberry Pi Kubernetes cluster from scratch: k3s across nodes, a private container registry, nginx ingress, and Gateway API — the substrate the llmmllab services actually run on.",
+    tags: ["Shell","Go","k3s","Kubernetes","nginx"] },
+  { n: "react-gallery-designer", url: "https://www.npmjs.com/package/react-gallery-designer", badge: "npm · 34 releases", t: ["backend"],
+    d: "Published React component for high-definition interactive image galleries and carousels, with a UMD build on unpkg. Maintained across 34 versions.",
+    tags: ["JavaScript","React","npm"] },
+  { n: "react-image-designer", url: "https://www.npmjs.com/package/react-image-designer", badge: "npm · 25 releases", t: ["backend"],
+    d: "Published React package for progressively loaded, dynamically composed images.",
+    tags: ["JavaScript","React","npm"] },
+  { n: "long-story-library", url: "https://www.npmjs.com/package/long-story-library", badge: "npm · 23 releases", t: ["backend"],
+    d: "Dependency-free JavaScript utility library — the primitives I kept rewriting, published once.",
+    tags: ["JavaScript","npm"] },
+  { n: "LongStoryPress", url: "https://github.com/longstoryscott/LongStoryPress", badge: null, t: ["backend","platform"],
+    d: "Headless WordPress multisite behind nginx as a reverse proxy for a Node server with an SSR React frontend — each WordPress subsite drives a corresponding React subsite, with a build script that emits the nginx server block.",
+    tags: ["JavaScript","PHP","React","nginx","SSR"] },
+  { n: "magic-mouse-gnome", url: "https://github.com/longstoryscott/magic-mouse-gnome", badge: null, t: ["platform"],
+    d: "Reads raw HID touch data off a Magic Mouse 2 to synthesize swipe gestures on Linux/Wayland, working around GNOME's missing virtual-keyboard protocol by driving the kernel uinput framework directly.",
+    tags: ["Python","HID","uinput","Wayland"] },
+  { n: "Embedded & robotics", url: "https://github.com/longstoryscott?tab=repositories", badge: null, t: ["platform"],
+    d: "An Arduino quadcopter flight controller and paired RC controller with IMU sensor fusion, a mecanum-wheel rover, a Raspberry Pi + Arduino wireless IoT controller, a full-stack IoT heat pump system spanning firmware, a Go API and a TypeScript UI, and a 3D-printer filament-extruder auger controller.",
+    tags: ["C","C++","Arduino","ESP32","Go"] },
+  { n: "Upstream contributions", url: "https://github.com/openclaw/openclaw/pulls?q=author%3Alongstoryscott", badge: null, t: ["ai","backend"],
+    d: "openclaw/openclaw (per-agent and per-cron-job provider request headers), abetlen/llama-cpp-python, and watzon/wsl-proxy.",
+    tags: ["TypeScript","Python","OSS"] },
+];
+
+const SKILLS = [
+  ["Languages", "Python · C#/.NET · Go · TypeScript/JavaScript · SQL · Java · Bash · PHP · C/C++"],
+  ["Backend", "FastAPI · ASP.NET Core · Node.js · Azure Functions · GraphQL · REST · gRPC/protobuf"],
+  ["Frontend", "React · TypeScript · Vite · MUI · Piral micro-frontends · Vitest · Playwright"],
+  ["Data", "PostgreSQL · SQL Server · MongoDB · Redis · Databricks · JanusGraph/Gremlin · SQLAlchemy · Alembic"],
+  ["Cloud", "Azure — Container Apps &amp; Jobs, Service Bus, Event Grid, APIM, Entra ID, Key Vault, Functions, Blob, App Insights · AWS"],
+  ["Infrastructure", "Terraform · Docker · Kubernetes / k3s · private networking · Workload Identity Federation"],
+  ["CI/CD &amp; Ops", "Azure Pipelines · semantic versioning · OpenTelemetry · SRE patterns · load testing · observability"],
+  ["Applied AI", "LLM code generation &amp; self-healing systems · Anthropic Claude API · prompt contracts &amp; caching · structured outputs · MCP servers · computer-use agents · vision-language grounding · LangGraph · self-hosted vLLM &amp; llama.cpp · multi-GPU inference routing"],
+  ["Embedded", "C/C++ on Arduino &amp; ESP32 · raw HID · Linux uinput · IMU sensor fusion · k3s on bare metal"],
+  ["Domain", "Healthcare revenue cycle management · EHR integration · FHIR/HL7 · PHI-handling compliance posture"],
+];
+
+/* ============================================================ render ======= */
+const $ = (s, r = document) => r.querySelector(s);
+const el = (t, c, h) => { const n = document.createElement(t); if (c) n.className = c; if (h != null) n.innerHTML = h; return n; };
+const fmt = n => n.toLocaleString("en-US");
+
+$("#lede").innerHTML = LEDE;
+
+$("#tiles").append(...TILES.map(t => {
+  const d = el("div", "tile");
+  d.append(el("div", "tile-val", t.v), el("div", "tile-lbl", t.l), el("div", "tile-sub", t.s));
+  return d;
+}));
+
+/* ---- charts: single series, direct-labelled, hover + table twin ---- */
+const tip = $("#tip");
+function showTip(evt, key, val, unit, note) {
+  tip.innerHTML = `<span class="tk">${key}${note ? " · " + note : ""}</span><span class="tv">${fmt(val)}</span> ${unit}`;
+  tip.classList.add("on");
+  moveTip(evt);
+}
+function moveTip(evt) {
+  const pad = 14, r = tip.getBoundingClientRect();
+  let x = evt.clientX + pad, y = evt.clientY - r.height - pad;
+  if (x + r.width > innerWidth - 8) x = evt.clientX - r.width - pad;
+  if (y < 8) y = evt.clientY + pad;
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+}
+const hideTip = () => { keyboardTip = false; tip.classList.remove("on"); };
+/* Focusing a bar scrolls it into view, which would instantly dismiss its own
+   tooltip — so a keyboard-opened tooltip survives scrolling; a hover one doesn't. */
+let keyboardTip = false;
+addEventListener("scroll", () => { if (!keyboardTip) tip.classList.remove("on"); }, { passive: true });
+
+function svgEl(t, attrs) {
+  const n = document.createElementNS("http://www.w3.org/2000/svg", t);
+  for (const k in attrs) n.setAttribute(k, attrs[k]);
+  return n;
+}
+
+/** Vertical bars. 4px rounded data-ends, anchored to the baseline. */
+function vBars(spec) {
+  const W = 520, H = 250, ML = 44, MR = 14, MT = 16, MB = 34;
+  const pw = W - ML - MR, ph = H - MT - MB;
+  const max = Math.max(...spec.data.map(d => d.v)) * 1.12;
+  const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, role: "img",
+    "aria-label": `${spec.title}. ${spec.data.map(d => `${d.k}: ${fmt(d.v)}`).join(", ")}.` });
+
+  // recessive solid hairline grid
+  for (let i = 0; i <= 4; i++) {
+    const y = MT + ph - (ph * i / 4), v = Math.round(max * i / 4);
+    svg.append(svgEl("line", { class: "gridline", x1: ML, x2: ML + pw, y1: y, y2: y }));
+    const tx = svgEl("text", { class: "tick", x: ML - 9, y: y + 3.5, "text-anchor": "end" });
+    tx.textContent = v >= 1000 ? (v / 1000).toFixed(1).replace(/\.0$/, "") + "k" : v;
+    svg.append(tx);
+  }
+  svg.append(svgEl("line", { class: "axisline", x1: ML, x2: ML + pw, y1: MT + ph, y2: MT + ph }));
+
+  const n = spec.data.length, slot = pw / n, bw = Math.min(32, slot * 0.38);
+  spec.data.forEach((d, i) => {
+    const cx = ML + slot * i + slot / 2;
+    const h = Math.max(2, (d.v / max) * ph), y = MT + ph - h, x = cx - bw / 2;
+    const g = svgEl("g", { class: "bargroup", tabindex: "0", role: "listitem",
+      "aria-label": `${d.k}: ${fmt(d.v)} ${spec.unit}` });
+    // rounded top only, flat on the baseline
+    g.append(svgEl("path", { class: "bar", d:
+      `M${x},${y + h} L${x},${y + 4} Q${x},${y} ${x + 4},${y} L${x + bw - 4},${y} Q${x + bw},${y} ${x + bw},${y + 4} L${x + bw},${y + h} Z` }));
+    const lb = svgEl("text", { class: "barlabel", x: cx, y: y - 7, "text-anchor": "middle" });
+    lb.textContent = fmt(d.v);
+    g.append(lb);
+    const kt = svgEl("text", { class: "catlabel", x: cx, y: MT + ph + 18, "text-anchor": "middle" });
+    kt.textContent = d.k;
+    g.append(kt);
+    // hit target larger than the mark
+    g.append(svgEl("rect", { class: "hit", x: cx - slot / 2, y: MT, width: slot, height: ph }));
+    const on = e => { keyboardTip = false; showTip(e, d.k, d.v, spec.unit, d.note); };
+    g.addEventListener("mouseenter", on); g.addEventListener("mousemove", moveTip);
+    g.addEventListener("mouseleave", hideTip);
+    g.addEventListener("focus", () => {
+      const r = g.getBoundingClientRect();
+      showTip({ clientX: r.left + r.width / 2, clientY: r.top }, d.k, d.v, spec.unit, d.note);
+      keyboardTip = true;
+    });
+    g.addEventListener("blur", hideTip);
+    svg.append(g);
+  });
+  return svg;
+}
+
+/** Horizontal bars — long category names need the horizontal form. */
+function hBars(spec) {
+  const W = 520, ML = 128, MR = 60, MT = 6, rowH = 25, gap = 2;
+  const H = MT + spec.data.length * rowH + 6, pw = W - ML - MR;
+  const max = Math.max(...spec.data.map(d => d.v));
+  const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, role: "img",
+    "aria-label": `${spec.title}. ${spec.data.map(d => `${d.k}: ${fmt(d.v)}`).join(", ")}.` });
+  svg.append(svgEl("line", { class: "axisline", x1: ML, x2: ML, y1: MT, y2: H - 6 }));
+
+  spec.data.forEach((d, i) => {
+    const y = MT + i * rowH, bh = rowH - gap * 2 - 5;
+    const w = Math.max(2, (d.v / max) * pw);
+    const g = svgEl("g", { class: "bargroup", tabindex: "0", role: "listitem",
+      "aria-label": `${d.k}: ${fmt(d.v)} ${spec.unit}` });
+    g.append(svgEl("path", { class: "bar", d:
+      `M${ML},${y + 2} L${ML + w - 4},${y + 2} Q${ML + w},${y + 2} ${ML + w},${y + 6} L${ML + w},${y + 2 + bh - 4} Q${ML + w},${y + 2 + bh} ${ML + w - 4},${y + 2 + bh} L${ML},${y + 2 + bh} Z` }));
+    const kt = svgEl("text", { class: "catlabel", x: ML - 9, y: y + bh / 2 + 6, "text-anchor": "end" });
+    kt.textContent = d.k;
+    g.append(kt);
+    // label outside the bar end — never clipped inside it
+    const vt = svgEl("text", { class: "barlabel", x: ML + w + 8, y: y + bh / 2 + 6 });
+    vt.textContent = fmt(d.v);
+    g.append(vt);
+    g.append(svgEl("rect", { class: "hit", x: ML, y: y, width: pw + MR, height: rowH }));
+    const on = e => { keyboardTip = false; showTip(e, d.k, d.v, spec.unit); };
+    g.addEventListener("mouseenter", on); g.addEventListener("mousemove", moveTip);
+    g.addEventListener("mouseleave", hideTip);
+    g.addEventListener("focus", () => {
+      const r = g.getBoundingClientRect();
+      showTip({ clientX: r.left + 120, clientY: r.top }, d.k, d.v, spec.unit);
+      keyboardTip = true;
+    });
+    g.addEventListener("blur", hideTip);
+    svg.append(g);
+  });
+  return svg;
+}
+
+function chartCard(spec, render) {
+  const card = el("div", "card");
+  const head = el("div", "card-head");
+  head.append(el("h3", "card-title", spec.title));
+  const toggle = el("button", "linkbtn", "Table view");
+  toggle.type = "button";
+  toggle.setAttribute("aria-expanded", "false");
+  head.append(toggle);
+  card.append(head, el("p", "card-sub", spec.sub), render(spec));
+
+  // every value is reachable without hover
+  const tv = el("div", "tableview");
+  tv.innerHTML = `<table><caption class="skip">${spec.title}</caption><thead><tr>
+      <th scope="col">${spec.cat}</th><th scope="col" style="text-align:right">${spec.unit}</th>
+    </tr></thead><tbody>${spec.data.map(d =>
+      `<tr><th scope="row" style="font-weight:400;color:var(--text-secondary)">${d.k}</th><td class="num">${fmt(d.v)}</td></tr>`).join("")}</tbody></table>`;
+  card.append(tv);
+  toggle.addEventListener("click", () => {
+    const on = tv.classList.toggle("on");
+    toggle.textContent = on ? "Hide table" : "Table view";
+    toggle.setAttribute("aria-expanded", String(on));
+  });
+  return card;
+}
+
+$("#charts").append(chartCard(CHART_COMMITS, vBars), chartCard(CHART_LINES, hBars));
+
+/* ---- experience ---- */
+const jobsRoot = $("#jobs");
+JOBS.forEach(j => {
+  const wrap = el("div", "job");
+  const head = el("div", "job-head");
+  head.append(el("h3", "job-title",
+    j.org ? `${j.title} <span class="job-org">· ${j.org}</span>` : j.title));
+  head.append(el("span", "job-when", j.when + (j.place ? " · " + j.place : "")));
+  wrap.append(head);
+  if (j.blurb) wrap.append(el("p", "job-blurb", j.blurb));
+
+  j.initiatives.forEach(ini => {
+    const box = el("div", "initiative");
+    if (ini.name) {
+      box.append(el("h4", null, `${ini.name}${ini.chip ? ` <span class="chip">${ini.chip}</span>` : ""}`));
+      if (ini.note) box.append(el("p", "initiative-note", ini.note));
+    }
+    const ul = el("ul", "bullets");
+    ini.bullets.forEach(b => {
+      const li = el("li", null, b.h);
+      li.dataset.lens = b.t.join(" ");
+      ul.append(li);
+    });
+    box.append(ul);
+    wrap.append(box);
+  });
+  jobsRoot.append(wrap);
+});
+
+/* ---- projects ---- */
+$("#projects").append(...PROJECTS.map(p => {
+  const c = el("div", "proj");
+  c.dataset.lens = p.t.join(" ");
+  const top = el("div", "proj-top");
+  top.append(el("h3", "proj-name",
+    `<a href="${p.url}" rel="noopener" target="_blank">${p.n}</a>`));
+  if (p.badge) top.append(el("span", "proj-badge", p.badge));
+  c.append(top, el("p", "proj-desc", p.d));
+  const tg = el("div", "proj-tags");
+  tg.append(...p.tags.map(t => el("span", "tag", t)));
+  c.append(tg);
+  return c;
+}));
+
+/* ---- skills ---- */
+SKILLS.forEach(([k, v]) => {
+  const row = el("div", "skillrow");
+  row.append(el("dt", null, k), el("dd", null, v));
+  $("#skillList").append(row);
+});
+
+/* ---- the lens filter: one row, scopes everything ---- */
+const lensBtns = [...document.querySelectorAll(".lens")];
+const filterable = () => [...document.querySelectorAll("[data-lens]")];
+
+function applyLens(lens) {
+  filterable().forEach(n => {
+    const match = lens === "all" || n.dataset.lens.split(" ").includes(lens);
+    n.classList.toggle("dim", !match);
+  });
+  // hide an initiative or section that has nothing left to say
+  document.querySelectorAll(".initiative").forEach(box => {
+    const items = [...box.querySelectorAll("li[data-lens]")];
+    box.style.display = items.length && items.every(li => li.classList.contains("dim")) ? "none" : "";
+  });
+  document.querySelectorAll(".job").forEach(job => {
+    const boxes = [...job.querySelectorAll(".initiative")];
+    job.style.display = boxes.length && boxes.every(b => b.style.display === "none") ? "none" : "";
+  });
+  // a section with nothing left in this lens says so, rather than showing a bare heading
+  document.querySelectorAll("section").forEach(sec => {
+    const items = [...sec.querySelectorAll("[data-lens]")];
+    if (!items.length) return;
+    const empty = items.every(n => n.classList.contains("dim"));
+    let msg = sec.querySelector(".lens-empty");
+    if (empty && !msg) {
+      msg = el("p", "sec-note lens-empty", "Nothing in this lens — switch to <strong>Everything</strong> to see this section.");
+      sec.append(msg);
+    }
+    if (msg) msg.style.display = empty ? "" : "none";
+  });
+  lensBtns.forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lens === lens)));
+  history.replaceState(null, "", lens === "all" ? location.pathname : "#lens=" + lens);
+}
+
+// counts, so the reader knows what each lens holds before clicking
+lensBtns.forEach(b => {
+  const lens = b.dataset.lens;
+  const n = lens === "all"
+    ? filterable().length
+    : filterable().filter(x => x.dataset.lens.split(" ").includes(lens)).length;
+  b.insertAdjacentHTML("beforeend", `<span class="lens-count">${n}</span>`);
+  b.addEventListener("click", () => applyLens(lens));
+});
+
+const fromHash = (location.hash.match(/lens=(\w+)/) || [])[1];
+applyLens(lensBtns.some(b => b.dataset.lens === fromHash) ? fromHash : "all");
+
+/* ---- theme toggle: wins over the OS setting, both ways ---- */
+const themeBtn = $("#themeBtn");
+const stored = localStorage.getItem("theme");
+if (stored === "light" || stored === "dark") document.documentElement.dataset.theme = stored;
+
+function isDark() {
+  const t = document.documentElement.dataset.theme;
+  return t === "dark" || (t !== "light" && matchMedia("(prefers-color-scheme: dark)").matches);
+}
+function syncThemeBtn() { themeBtn.textContent = isDark() ? "Light mode" : "Dark mode"; }
+themeBtn.addEventListener("click", () => {
+  const next = isDark() ? "light" : "dark";
+  document.documentElement.dataset.theme = next;
+  localStorage.setItem("theme", next);
+  syncThemeBtn();
+});
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", syncThemeBtn);
+syncThemeBtn();
+</script>
+</body>
+</html>
